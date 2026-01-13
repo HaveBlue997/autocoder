@@ -48,6 +48,20 @@ chmod +x init.sh
 
 Otherwise, start servers manually and document the process.
 
+### STEP 2.5: ERROR RECOVERY (If Needed)
+
+If you encounter a feature stuck in "in_progress" from a previous crashed session:
+1. Check git log and claude-progress.txt to understand what was attempted
+2. Use `feature_clear_in_progress` to reset the feature status
+3. Assess whether partial work was committed
+4. Either complete the feature or start fresh
+
+If browser automation fails to launch:
+1. Check if the dev server is running (init.sh)
+2. Verify the correct port in browser_navigate calls
+3. Check console output for Playwright errors
+4. As last resort, document the issue and skip to next feature
+
 ### STEP 3: VERIFICATION TEST (CRITICAL!)
 
 **MANDATORY BEFORE NEW WORK:**
@@ -153,6 +167,8 @@ Implement the chosen feature thoroughly:
 
 **CRITICAL:** You MUST verify features through the actual UI.
 
+**Note:** Browser automation tools are only available in standard mode. If you don't see these tools, you're in YOLO mode - use lint/type-check verification instead.
+
 Use browser automation tools:
 
 - Navigate to the app in a real browser
@@ -209,48 +225,17 @@ Use browser automation tools:
 - [ ] Loading states appeared during API calls
 - [ ] Error states handle failures gracefully
 
-### STEP 6.6: MOCK DATA DETECTION SWEEP
+### STEP 6.6: MOCK DATA DETECTION
 
-**Run this sweep AFTER EVERY FEATURE before marking it as passing:**
+If you see data that wasn't created during testing - IT'S MOCK DATA. Fix it.
 
-#### 1. Code Pattern Search
-
-Search the codebase for forbidden patterns:
+**Quick code search for forbidden patterns:**
 
 ```bash
-# Search for mock data patterns
-grep -r "mockData\|fakeData\|sampleData\|dummyData\|testData" --include="*.js" --include="*.ts" --include="*.jsx" --include="*.tsx"
-grep -r "// TODO\|// FIXME\|// STUB\|// MOCK" --include="*.js" --include="*.ts" --include="*.jsx" --include="*.tsx"
-grep -r "hardcoded\|placeholder" --include="*.js" --include="*.ts" --include="*.jsx" --include="*.tsx"
+grep -r "mockData\|fakeData\|sampleData\|dummyData" --include="*.js" --include="*.ts" --include="*.jsx" --include="*.tsx"
 ```
 
-**If ANY matches found related to your feature - FIX THEM before proceeding.**
-
-#### 2. Runtime Verification
-
-For ANY data displayed in UI:
-
-1. Create NEW data with UNIQUE content (e.g., "TEST_12345_DELETE_ME")
-2. Verify that EXACT content appears in the UI
-3. Delete the record
-4. Verify it's GONE from the UI
-5. **If you see data that wasn't created during testing - IT'S MOCK DATA. Fix it.**
-
-#### 3. Database Verification
-
-Check that:
-
-- Database tables contain only data you created during tests
-- Counts/statistics match actual database record counts
-- No seed data is masquerading as user data
-
-#### 4. API Response Verification
-
-For API endpoints used by this feature:
-
-- Call the endpoint directly
-- Verify response contains actual database data
-- Empty database = empty response (not pre-populated mock data)
+If matches found related to your feature, remove them before marking as passing.
 
 ### STEP 7: UPDATE FEATURE STATUS (CAREFULLY!)
 
@@ -298,6 +283,28 @@ Update `claude-progress.txt` with:
 - What should be worked on next
 - Current completion status (e.g., "45/200 tests passing")
 
+**Use this format:**
+
+```
+## Session Summary - [DATE]
+
+### Completed This Session
+- Feature #42: User login - PASSING
+
+### Issues Found & Fixed
+- Fixed white-on-white text in login form
+
+### Current State
+- 45/200 features passing
+- App running on localhost:3000
+
+### Next Session Should
+1. Continue with Feature #44 (User registration)
+
+### Blockers
+- None currently
+```
+
 ### STEP 10: END SESSION CLEANLY
 
 Before context fills up:
@@ -307,6 +314,13 @@ Before context fills up:
 3. Mark features as passing if tests verified
 4. Ensure no uncommitted changes
 5. Leave app in working state (no broken features)
+
+**Signs your context is filling up:**
+- Tool calls start failing or timing out
+- Responses become slower or truncated
+- You've been working for 20+ tool calls without a commit
+
+**Rule of thumb:** Commit and wrap up after completing 1-2 features, or after ~30 minutes of active work. It's better to end early than lose work.
 
 ---
 

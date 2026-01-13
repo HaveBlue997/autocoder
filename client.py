@@ -59,6 +59,37 @@ FEATURE_MCP_TOOLS = [
     "mcp__features__feature_mark_passing",
     "mcp__features__feature_skip",
     "mcp__features__feature_create_bulk",
+    "mcp__features__feature_clear_in_progress",
+]
+
+# Chrome DevTools MCP tools for browser automation
+CHROME_DEVTOOLS_TOOLS = [
+    "mcp__chrome-devtools__click",
+    "mcp__chrome-devtools__close_page",
+    "mcp__chrome-devtools__drag",
+    "mcp__chrome-devtools__emulate",
+    "mcp__chrome-devtools__evaluate_script",
+    "mcp__chrome-devtools__fill",
+    "mcp__chrome-devtools__fill_form",
+    "mcp__chrome-devtools__get_console_message",
+    "mcp__chrome-devtools__get_network_request",
+    "mcp__chrome-devtools__handle_dialog",
+    "mcp__chrome-devtools__hover",
+    "mcp__chrome-devtools__list_console_messages",
+    "mcp__chrome-devtools__list_network_requests",
+    "mcp__chrome-devtools__list_pages",
+    "mcp__chrome-devtools__navigate_page",
+    "mcp__chrome-devtools__new_page",
+    "mcp__chrome-devtools__performance_analyze_insight",
+    "mcp__chrome-devtools__performance_start_trace",
+    "mcp__chrome-devtools__performance_stop_trace",
+    "mcp__chrome-devtools__press_key",
+    "mcp__chrome-devtools__resize_page",
+    "mcp__chrome-devtools__select_page",
+    "mcp__chrome-devtools__take_screenshot",
+    "mcp__chrome-devtools__take_snapshot",
+    "mcp__chrome-devtools__upload_file",
+    "mcp__chrome-devtools__wait_for",
 ]
 
 # Playwright MCP tools for browser automation
@@ -129,10 +160,11 @@ def create_client(project_dir: Path, model: str, yolo_mode: bool = False):
     The Claude SDK auto-detects credentials from the Claude CLI configuration
     """
     # Build allowed tools list based on mode
-    # In YOLO mode, exclude Playwright tools for faster prototyping
+    # In YOLO mode, exclude browser automation tools for faster prototyping
     allowed_tools = [*BUILTIN_TOOLS, *FEATURE_MCP_TOOLS]
     if not yolo_mode:
         allowed_tools.extend(PLAYWRIGHT_TOOLS)
+        allowed_tools.extend(CHROME_DEVTOOLS_TOOLS)
 
     # Build permissions list
     permissions_list = [
@@ -152,8 +184,9 @@ def create_client(project_dir: Path, model: str, yolo_mode: bool = False):
         *FEATURE_MCP_TOOLS,
     ]
     if not yolo_mode:
-        # Allow Playwright MCP tools for browser automation (standard mode only)
+        # Allow browser automation MCP tools (standard mode only)
         permissions_list.extend(PLAYWRIGHT_TOOLS)
+        permissions_list.extend(CHROME_DEVTOOLS_TOOLS)
 
     # Create comprehensive security settings
     # Note: Using relative paths ("./**") restricts access to project directory
@@ -179,9 +212,9 @@ def create_client(project_dir: Path, model: str, yolo_mode: bool = False):
     print(f"   - Filesystem restricted to: {project_dir.resolve()}")
     print("   - Bash commands restricted to allowlist (see security.py)")
     if yolo_mode:
-        print("   - MCP servers: features (database) - YOLO MODE (no Playwright)")
+        print("   - MCP servers: features (database) - YOLO MODE (no browser automation)")
     else:
-        print("   - MCP servers: playwright (browser), features (database)")
+        print("   - MCP servers: playwright, chrome-devtools (browser), features (database)")
     print("   - Project settings enabled (skills, commands, CLAUDE.md)")
     print()
 
@@ -214,6 +247,11 @@ def create_client(project_dir: Path, model: str, yolo_mode: bool = False):
         mcp_servers["playwright"] = {
             "command": "npx",
             "args": playwright_args,
+        }
+        # Include Chrome DevTools MCP server for browser automation
+        mcp_servers["chrome-devtools"] = {
+            "command": "npx",
+            "args": ["chrome-devtools-mcp@latest", "--browserUrl=http://127.0.0.1:9222"],
         }
 
     # Build environment overrides for API endpoint configuration

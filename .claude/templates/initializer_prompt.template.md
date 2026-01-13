@@ -13,7 +13,7 @@ before proceeding.
 
 ## REQUIRED FEATURE COUNT
 
-**CRITICAL:** You must create exactly **[FEATURE_COUNT]** features using the `feature_create_bulk` tool.
+**CRITICAL:** Check the `feature_count` field in app_spec.txt and create exactly that many features using the `feature_create_bulk` tool.
 
 This number was determined during spec creation and must be followed precisely. Do not create more or fewer features than specified.
 
